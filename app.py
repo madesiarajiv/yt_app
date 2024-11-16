@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, VideoUnavailable, NoTranscriptFound
-from youtube_transcript_api.formatters import Formatter  # You can keep this for future use if needed
+from youtube_transcript_api.formatters import Formatter  # For future use if needed
 from urllib.parse import urlparse, parse_qs
 
 app = Flask(__name__)
@@ -32,6 +32,12 @@ def get_subtitles():
     except NoTranscriptFound:
         error_message = "No subtitles available for this video."
         return render_template('result.html', subtitles=None, error=error_message)
+    except TranscriptsDisabled:
+        error_message = "Subtitles are disabled for this video."
+        return render_template('result.html', subtitles=None, error=error_message)
+    except Exception as e:
+        error_message = f"An unexpected error occurred: {e}"
+        return render_template('result.html', subtitles=None, error=error_message)
 
     # Fetch subtitles for each available language and format
     subtitles_data = {}
@@ -45,8 +51,6 @@ def get_subtitles():
                 'srt': formatted_srt,
                 'txt': formatted_txt
             }
-        except TranscriptsDisabled:
-            continue
         except Exception as e:
             print(f"Error fetching subtitles for language {language_code}: {e}")
             continue
